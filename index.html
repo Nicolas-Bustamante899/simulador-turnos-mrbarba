@@ -1,15 +1,83 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Simulador de turnos - Mr. Barba</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mr. Barba · Simulador de Turnos</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
 </head>
 <body>
-  <h1>Simulador de turnos - Mr. Barba</h1>
-  <p>Este simulador permite al usuario seleccionar un servicio de barbería, elegir día y hora, y reservar su turno. La interacción se realiza por medio de la consola del navegador y cuadros de diálogo (alert, prompt, confirm).</p>
+  <header class="container">
+    <h1>Mr. Barba · Simulador de Turnos</h1>
+    <p>Seleccioná un servicio, elegí día y hora, y reservá tu turno. Todos los datos se guardan en el navegador (localStorage).</p>
+  </header>
 
-  <script src="./scritp.js"></script>
+  <main class="container grid">
+    <section>
+      <h2>Servicios</h2>
+      <div id="listaServicios" class="cards"></div>
+    </section>
+
+    <section>
+      <h2>Reservar turno</h2>
+      <form id="formTurno" class="card">
+        <div class="field">
+          <label for="cliente">Nombre del cliente</label>
+          <input type="text" id="cliente" placeholder="Ej: Nico" required />
+        </div>
+        <div class="field">
+          <label for="servicio">Servicio</label>
+          <select id="servicio" required></select>
+        </div>
+        <div class="field">
+          <label for="fecha">Fecha</label>
+          <input type="date" id="fecha" required />
+        </div>
+        <div class="field">
+          <label for="hora">Hora</label>
+          <input type="time" id="hora" required />
+        </div>
+
+        <button type="submit" class="btn">Agregar turno</button>
+        <p id="msg" class="msg" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <section class="full">
+      <h2>Turnos reservados</h2>
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cliente</th>
+              <th>Servicio</th>
+              <th>Fecha</th>
+              <th>Hora</th>
+              <th>Precio</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="tbodyTurnos"></tbody>
+          <tfoot>
+            <tr>
+              <td colspan="5" class="right">Total</td>
+              <td id="total">$0</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+      <div class="actions">
+        <button id="btnLimpiar" class="btn outline">Vaciar turnos</button>
+      </div>
+    </section>
+  </main>
+
+  <footer class="container">
+    <small>Entregable 2 · Coderhouse — Integración DOM, Eventos y LocalStorage</small>
+  </footer>
+
+  <script src="./js/app.js"></script>
 </body>
 </html>
-
-
