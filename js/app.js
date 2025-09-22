@@ -18,11 +18,13 @@ const $msg = document.getElementById('msg');
 const $tbody = document.getElementById('tbodyTurnos');
 const $total = document.getElementById('total');
 const $btnLimpiar = document.getElementById('btnLimpiar');
+const $btnConfirmar = document.getElementById('btnConfirmar');
 
 // ----- UTILIDADES -----
 const currency = n => new Intl.NumberFormat('es-AR', { style:'currency', currency:'ARS', maximumFractionDigits:0 }).format(n);
 
 function setMsg(texto, tipo='') {
+  // keep small in-page messages for validation only
   $msg.className = 'msg ' + (tipo ? tipo : '');
   $msg.textContent = texto || '';
 }
@@ -121,7 +123,8 @@ async function cargarServicios() {
       new Servicio(2, 'Barba', 6000),
       new Servicio(3, 'Corte + Barba', 11500),
     ];
-    console.warn('Usando servicios por defecto (no se pudo leer JSON):', e.message);
+    // no console output; show an in-page message if needed
+    setMsg('Cargando servicios desde fallback. (Si abrís por file:// el fetch puede fallar)', 'error');
   }
 }
 
@@ -134,6 +137,10 @@ function validarForm({ cliente, servicioId, fecha, hora }) {
   // Evitar horarios fuera de rango (opcional)
   const [hh, mm] = hora.split(':').map(Number);
   if (hh < 9 || (hh > 20) || (hh === 20 && mm > 0)) return 'Horario fuera de atención (09:00 a 20:00).';
+  // Evitar fechas pasadas
+  const hoy = new Date();
+  const fechaElegida = new Date(fecha + 'T' + hora);
+  if (fechaElegida < hoy) return 'No podés reservar en el pasado.';
   return '';
 }
 
@@ -149,7 +156,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const id = e.target?.dataset?.add;
     if (id) {
       $selectServicio.value = id;
-      setMsg('Servicio cargado en el formulario ✔️', 'ok');
+      // show a small toast using SweetAlert2
+      Swal.fire({
+        toast: true,
+        position: 'top-end',
+        timer: 1500,
+        showConfirmButton: false,
+        icon: 'success',
+        title: 'Servicio cargado en el formulario'
+      });
     }
   });
 
@@ -166,31 +181,98 @@ document.addEventListener('DOMContentLoaded', async () => {
     const err = validarForm(data);
     if (err) {
       setMsg(err, 'error');
+      // also show a modal
+      Swal.fire({ icon: 'error', title: 'Error', text: err });
       return;
     }
     try {
       agregarTurno(data);
       $form.reset();
       setMsg('Turno agregado correctamente ✅', 'ok');
+      Swal.fire({ icon: 'success', title: 'Turno agregado', text: 'Se guardó el turno correctamente.' });
     } catch (error) {
       setMsg(error.message, 'error');
+      Swal.fire({ icon: 'error', title: 'Error', text: error.message });
     }
   });
 
-  // Eliminar turno (delegación)
+  // Eliminar turno (delegación) with confirmation
   $tbody.addEventListener('click', (e) => {
     const id = e.target?.dataset?.del;
     if (id) {
-      eliminarTurno(id);
-      setMsg('Turno eliminado 🗑️', 'ok');
+      const turno = TURNOS.find(t => t.id === id);
+      Swal.fire({
+        title: 'Eliminar turno',
+        html: `Eliminar turno de <strong>${turno.cliente}</strong><br>${turno.servicio} - ${turno.fecha} ${turno.hora}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+      }).then(result => {
+        if (result.isConfirmed) {
+          eliminarTurno(id);
+          Swal.fire({ icon: 'success', title: 'Eliminado', text: 'Turno eliminado correctamente.' });
+        }
+      });
     }
   });
 
-  // Limpiar todos
+  // Limpiar todos with confirmation
   $btnLimpiar.addEventListener('click', () => {
-    TURNOS = [];
-    guardarTurnos();
-    renderTurnos();
-    setMsg('Se vaciaron los turnos.', 'ok');
+    if (TURNOS.length === 0) {
+      Swal.fire({ icon: 'info', title: 'Sin turnos', text: 'No hay turnos para vaciar.' });
+      return;
+    }
+    Swal.fire({
+      title: 'Vaciar todos los turnos?',
+      text: 'Se eliminarán todos los turnos guardados en el navegador.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonText: 'Sí, vaciar',
+      cancelButtonText: 'Cancelar'
+    }).then(result => {
+      if (result.isConfirmed) {
+        TURNOS = [];
+        guardarTurnos();
+        renderTurnos();
+        Swal.fire({ icon: 'success', title: 'Turnos vaciados', text: 'Se eliminaron todos los turnos.' });
+      }
+    });
   });
+
+  // Confirmar todos (simula proceso de checkout / pago)
+  $btnConfirmar.addEventListener('click', () => {
+    if (TURNOS.length === 0) {
+      Swal.fire({ icon: 'info', title: 'Sin turnos', text: 'No hay turnos para confirmar.' });
+      return;
+    }
+    // construir resumen
+    const resumen = TURNOS.map((t, i) => `${i+1}. ${t.cliente} — ${t.servicio} — ${t.fecha} ${t.hora} — ${currency(t.precio)}`).join('<br>');
+    Swal.fire({
+      title: 'Confirmar turnos',
+      html: `<div style="text-align:left">${resumen}<hr><strong>Total: ${currency(totalTurnos())}</strong></div>`,
+      showCancelButton: true,
+      confirmButtonText: 'Confirmar y procesar',
+      cancelButtonText: 'Volver'
+    }).then(result => {
+      if (result.isConfirmed) {
+        // Simulamos "procesamiento" y luego vaciamos
+        Swal.fire({
+          title: 'Procesando...',
+          text: 'Simulando pago y envío de confirmaciones.',
+          didOpen: () => {
+            Swal.showLoading();
+          },
+          timer: 1500,
+          showConfirmButton: false
+        }).then(() => {
+          TURNOS = [];
+          guardarTurnos();
+          renderTurnos();
+          Swal.fire({ icon: 'success', title: 'Turnos confirmados', text: 'Se confirmaron y guardaron las reservas.' });
+        });
+      }
+    });
+  });
+
 });

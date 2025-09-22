@@ -7,6 +7,16 @@
   <link rel="stylesheet" href="./css/styles.css"/>
 </head>
 <body>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mr. Barba · Simulador de Turnos</title>
+  <link rel="stylesheet" href="./css/styles.css"/>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+</head>
+<body>
   <header class="container">
     <h1>Mr. Barba · Simulador de Turnos</h1>
     <p>Seleccioná un servicio, elegí día y hora, y reservá tu turno. Todos los datos se guardan en el navegador (localStorage).</p>
@@ -69,15 +79,17 @@
         </table>
       </div>
       <div class="actions">
+        <button id="btnConfirmar" class="btn">Confirmar turnos</button>
         <button id="btnLimpiar" class="btn outline">Vaciar turnos</button>
       </div>
     </section>
   </main>
 
   <footer class="container">
-    <small>Entregable 2 · Coderhouse — Integración DOM, Eventos y LocalStorage</small>
+    <small>Proyecto Final · Mr. Barba — Integración DOM, Eventos y LocalStorage</small>
   </footer>
 
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.all.min.js"></script>
   <script src="./js/app.js"></script>
 </body>
 </html>
